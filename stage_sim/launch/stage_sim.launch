@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node pkg="stage_ros" type="stageros" name="stageros"
+        args="$(find stage_sim)/config/worlds/simple.world">
+    <remap from="base_scan" to="bumper_scan"/>
+  </node>
+
+  <node pkg="stage_sim" type="laser_bumper_node.py" name="laser_bumper_node"/>
+
+</launch>
