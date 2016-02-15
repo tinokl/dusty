@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node pkg="cleaning_action_server" type="cleaning_action_server.py" name="cleaning_action_server_node"/>
+
+</launch>

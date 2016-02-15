@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node pkg="pisusv" type="pisusv_node.py" name="pisusv_node"/>
+
+</launch>
