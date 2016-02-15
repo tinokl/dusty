@@ -24,7 +24,7 @@ class PISUSV:
         rospy.logerr("calling command")
         #os.system("sudo ./opt/susvd/susv -status")
 
-        output = subprocess.check_output("sudo ./opt/susvd/susv -status", shell=True)
+        output = subprocess.check_output("sudo /opt/susvd/susv -status", shell=True)
         rospy.logerr("output: " + str(output))
         #move = Twist()
         #self.pub.publish(move)
