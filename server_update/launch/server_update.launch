@@ -2,10 +2,10 @@
 <launch>
 
     <node pkg="server_update" type="server_update_node.py" name="server_update_node" output="screen">
-        <param name="server" value="http://ais.ist.tugraz.at" />
-      	<param name="topic_log" value="/rosout_agg" />
-      	<param name="topic_events" value="/lta_events_log" />
-      	<param name="topic_stats" value="/current_marathon_session" />
+        <param name="server" value="http://www.lassnig.cc/home" />
+      	<param name="topic_log" value="/log" />
+      	<param name="topic_events" value="/events" />
+      	<param name="topic_stats" value="/stats" />
       	<param name="ros_sleep_time" value="5.0" />
     </node>
 

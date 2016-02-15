@@ -1,21 +1,18 @@
 #!/usr/bin/env python
 
 import roslib
-roslib.load_manifest('lta_server_update')
 import requests
 import rospy
 import sys
 
 from std_msgs.msg import String
 from rosgraph_msgs.msg import Log
-from marathon_reporter.msg import MarathonSession
 
-
-class LtaServerUpdateNode():
+class ServerUpdateNode():
     
     def __init__(self):
 
-        self.server = rospy.get_param('~server', 'ais.ist.tugraz.at')
+        self.server = rospy.get_param('~server', 'lassnig.cc')
         self.topic_log = rospy.get_param('~topic_log', '')
         self.topic_events = rospy.get_param('~topic_events', '')
         self.topic_stats = rospy.get_param('~topic_stats', '')
@@ -23,9 +20,16 @@ class LtaServerUpdateNode():
 
         rospy.Subscriber(self.topic_log, Log, self.log_callback)
         rospy.Subscriber(self.topic_events, Log, self.event_callback)
-        rospy.Subscriber(self.topic_stats, MarathonSession, self.statistic_callback)
+        rospy.Subscriber(self.topic_stats, Log, self.statistic_callback)
+        
+        try:
+            url = self.server + '/put_event.php'
+            payload = {'msg': str("System Reboot!"), 'public': 1, 'visual': int(1)}
+            r = requests.post(url, data=payload)
+        except:
+            print " Error: unable to post event data!"   
 
-        rospy.spin()
+        rospy.spin()     
 
         while not rospy.is_shutdown():
             rospy.sleep(self.sleep_time)
@@ -58,8 +62,8 @@ class LtaServerUpdateNode():
 
 
 if __name__ == '__main__':
-    rospy.init_node('lta_server_update')
+    rospy.init_node('server_update')
     try:
-        ne = LtaServerUpdateNode()
+        ne = ServerUpdateNode()
     except rospy.ROSInterruptException:
         pass
