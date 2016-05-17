@@ -8,7 +8,7 @@ import sys
 from std_msgs.msg import String
 from rosgraph_msgs.msg import Log
 
-class ServerUpdateNode():
+class ServerUpdateNode:
     
     def __init__(self):
 
@@ -27,9 +27,7 @@ class ServerUpdateNode():
             payload = {'msg': str("System Reboot!"), 'public': 1, 'visual': int(1)}
             r = requests.post(url, data=payload)
         except:
-            print " Error: unable to post event data!"   
-
-        rospy.spin()     
+            print " Error: unable to post event data!"
 
         while not rospy.is_shutdown():
             rospy.sleep(self.sleep_time)

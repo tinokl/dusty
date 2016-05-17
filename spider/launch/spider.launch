@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+
+    <node pkg="spider" type="cmd_vel_node.py" name="cmd_vel_node" output="screen">
+      	<param name="topic_log" value="/log" />
+      	<param name="topic_events" value="/events" />
+      	<param name="topic_stats" value="/stats" />
+    </node>
+
+</launch>
