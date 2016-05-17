@@ -45,7 +45,7 @@ class PISUSV:
             string = " ".join(string.split())
             e = string.replace("Charging current: ", '')
             charging_current = float(e.replace("mA", ''))
-            self.charging_current = charging_current
+            self.charging_current = (charging_current / 1000.0)
 
           if "Power Battery" in item:
             string = item.strip()
@@ -53,7 +53,7 @@ class PISUSV:
             string = " ".join(string.split())
             e = string.replace("Power Battery: ", '')
             power_battery = float(e.replace("mA", ''))
-            self.power_battery = power_battery
+            self.power_battery = (power_battery / 1000.0)
             if self.power_battery > 0:
                 self.power_battery *= -1.0
 
