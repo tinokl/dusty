@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-    <node pkg="spider" type="cmd_vel_node.py" name="cmd_vel_node" output="screen">
+    <node pkg="spider" type="cmd_vel_node.py" name="spider_cmd_vel_node" output="screen">
       	<param name="pin_motor_left_front" value="11" />
       	<param name="pin_motor_right_front" value="9" />
       	<param name="pin_motor_left_back" value="14" />
@@ -20,7 +20,13 @@
       	<param name="rotation_correction" value="1.0" />
 
       	<param name="debug_mode" value="False" />
+    </node>
 
+    <node pkg="spider" type="event_node.py" name="spider_event_node" output="screen">
+      	<param name="pin_interrupt" value="5" />
+      	<param name="frequency" value="50" />
+
+      	<param name="debug_mode" value="False" />
     </node>
 
 </launch>

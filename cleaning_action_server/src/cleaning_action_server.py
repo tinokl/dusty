@@ -8,7 +8,7 @@ import rospy
 import random
 
 from geometry_msgs.msg import Twist
-from kobuki_msgs.msg import BumperEvent
+from spider_msgs.msg import BumperEvent
 
 
 class CleaningActionServer:

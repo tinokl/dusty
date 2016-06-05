@@ -13,7 +13,7 @@ from spider_msgs.msg import BumperEvent
 class SpiderEventNode:
     
     def __init__(self):
-        self.pin_interrupt = rospy.get_param('~pin_interrupt', 11)
+        self.pin_interrupt = rospy.get_param('~pin_interrupt', 5)
         self.frequency = rospy.get_param('~frequency', 50)
         self.rate = 1.0/self.frequency
 
