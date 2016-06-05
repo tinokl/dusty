@@ -35,7 +35,10 @@ class PISUSV:
 
         for item in output.split("\n"):
           if "Charging circuit: ONLINE" in item:
-            self.state_charging = BatteryState.POWER_SUPPLY_STATUS_CHARGING
+            if self.percentage > 0.9:
+              self.state_charging = BatteryState.POWER_SUPPLY_STATUS_FULL
+            else:
+              self.state_charging = BatteryState.POWER_SUPPLY_STATUS_CHARGING
           elif "Charging circuit: OFFLINE" in item:
             self.state_charging = BatteryState.POWER_SUPPLY_STATUS_DISCHARGING
 

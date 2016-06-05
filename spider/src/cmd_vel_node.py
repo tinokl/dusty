@@ -4,7 +4,7 @@ import roslib
 import rospy
 import sys
 import math
-from RPi import GPIO
+import pigpio
 
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
@@ -13,62 +13,88 @@ from geometry_msgs.msg import Twist
 class SpiderCMDVelNode:
     
     def __init__(self):
-        self.pin_motor_left_front = rospy.get_param('~pin_motor_left_front', 23)
-        self.pin_motor_right_front = rospy.get_param('~pin_motor_right_front', 21)
-        self.pin_motor_left_back = rospy.get_param('~pin_motor_left_back', 8)
-        self.pin_motor_right_back = rospy.get_param('~pin_motor_right_back', 12)
+        self.pin_motor_left_front = rospy.get_param('~pin_motor_left_front', 11)
+        self.pin_motor_right_front = rospy.get_param('~pin_motor_right_front', 9)
+        self.pin_motor_left_back = rospy.get_param('~pin_motor_left_back', 14)
+        self.pin_motor_right_back = rospy.get_param('~pin_motor_right_back', 18)
 
         self.wheel_dist = rospy.get_param('~wheel_dist', 22.3)
+        self.velocity_corr = rospy.get_param('~velocity_correction', 1.0)
+        self.rotation_corr = rospy.get_param('~rotation_correction', 1.0)
+
+        self.debug_mode = True
 
         try:
-            GPIO.setmode(GPIO.BOARD)
+            if not self.debug_mode:
+                self.pi = pigpio.pi()
 
-            # switch them off for now
-            GPIO.output(self.pin_motor_left_front, False)
-            GPIO.output(self.pin_motor_right_front, False)
-            GPIO.output(self.pin_motor_left_back, False)
-            GPIO.output(self.pin_motor_right_back, False)
+                # switch them off for now
+                pi.write(self.pin_motor_left_front, 0)
+                pi.write(self.pin_motor_right_front, 0)
+                pi.write(self.pin_motor_left_back, 0)
+                pi.write(self.pin_motor_right_back, 0)
         except:
             print " Error: unable to set cmd vel!"
-            #return
+            # return
 
-        self.speed_right = 0.0
-        self.speed_left = 0.0
+        self.vel_right = 0.0
+        self.vel_left = 0.0
 
         rospy.Subscriber("cmd_vel", Twist, self.cmd_cb)
 
         while not rospy.is_shutdown():
             rospy.sleep(0.02)  # 50Hz
-            self.set_motors()
+            # TODO: publish odometry
 
     def cmd_cb(self, msg):
-        speed = msg.linear.x
-        angle = msg.angular.z
-        self.speed_right = angle * math.pi * self.wheel_dist / 2.0 + speed
-        self.speed_left = speed * 2 - self.speed_right
-        rospy.loginfo("speed right: " + str(self.speed_right) + " speed left: " + str(self.speed_left))
+        trans = msg.linear.x
+        rot = msg.angular.z
+
+        #self.speed_right = angle * math.pi * self.wheel_dist / 2.0 + speed
+        #self.speed_left = speed * 2 - self.speed_right
+        #rospy.loginfo("speed right: " + str(self.speed_right) + " speed left: " + str(self.speed_left))
+
+        # TODO CHECK MAX VALUES ANGLE AND SPEED
+
+        rot = rot * self.rotation_corr
+        vel_left = trans - 1.0 * rot * self.wheel_dist
+        vel_right = trans + 1.0 * rot * self.wheel_dist
+
+        self.vel_left = vel_left * self.velocity_corr
+        self.vel_right = vel_right * self.velocity_corr
+
+        if self.debug_mode:
+            rospy.loginfo("vel right: " + str(self.vel_right) + " vel left: " + str(self.vel_left))
+        else:
+            self.set_motors()
 
     def set_motors(self):
         try:
-            if self.speed_left > 0:
-                GPIO.output(self.pin_motor_left_back, False)
-                GPIO.output(self.pin_motor_left_front, True)
-            elif self.speed_left < 0:
-                GPIO.output(self.pin_motor_left_front, False)
-                GPIO.output(self.pin_motor_left_back, True)
+            # ## left motor
+            if self.vel_left > 0:
+                pi.write(self.pin_motor_left_back, 0)
+                # pi.write(self.pin_motor_left_front, 1)
+                pi.set_PWM_dutycycle(self.pin_motor_left_front, abs(self.vel_left))
+            elif self.vel_left < 0:
+                pi.write(self.pin_motor_left_front, 0)
+                # pi.write(self.pin_motor_left_back, 1)
+                pi.set_PWM_dutycycle(self.pin_motor_left_back, abs(self.vel_left))
             else:
-                GPIO.output(self.pin_motor_left_front, False)
-                GPIO.output(self.pin_motor_left_back, False)
+                pi.write(self.pin_motor_left_front, 0)
+                pi.write(self.pin_motor_left_back, 0)
 
-            if self.speed_right > 0:
-                GPIO.output(self.pin_motor_right_back, False)
-                GPIO.output(self.pin_motor_right_front, True)
-            elif self.speed_right < 0:
-                GPIO.output(self.pin_motor_right_front, False)
-                GPIO.output(self.pin_motor_right_back, True)
+            # ## right motor
+            if self.vel_right > 0:
+                pi.write(self.pin_motor_right_back, 0)
+                # pi.write(self.pin_motor_right_front, 1)
+                pi.set_PWM_dutycycle(self.pin_motor_right_front, abs(self.vel_right))
+            elif self.vel_right < 0:
+                pi.write(self.pin_motor_right_front, 0)
+                # pi.write(self.pin_motor_right_back, 1)
+                pi.set_PWM_dutycycle(self.pin_motor_right_back, abs(self.vel_right))
             else:
-                GPIO.output(self.pin_motor_right_back, False)
-                GPIO.output(self.pin_motor_right_front, False)
+                pi.write(self.pin_motor_right_back, 0)
+                pi.write(self.pin_motor_right_front, 0)
         except:
             print " Error: unable to set cmd vel!"
 
