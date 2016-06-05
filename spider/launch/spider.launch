@@ -2,9 +2,25 @@
 <launch>
 
     <node pkg="spider" type="cmd_vel_node.py" name="cmd_vel_node" output="screen">
-      	<param name="topic_log" value="/log" />
-      	<param name="topic_events" value="/events" />
-      	<param name="topic_stats" value="/stats" />
+      	<param name="pin_motor_left_front" value="11" />
+      	<param name="pin_motor_right_front" value="9" />
+      	<param name="pin_motor_left_back" value="14" />
+      	<param name="pin_motor_right_back" value="18" />
+
+        <!-- in meter -->
+      	<param name="wheel_dist" value="0.223" />
+
+      	<param name="max_velocity" value="255" />
+      	<param name="min_velocity" value="200" />
+
+        <!-- in sec -->
+      	<param name="timeout" value="1" />
+
+      	<param name="velocity_correction" value="1.0" />
+      	<param name="rotation_correction" value="1.0" />
+
+      	<param name="debug_mode" value="False" />
+
     </node>
 
 </launch>

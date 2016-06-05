@@ -18,50 +18,102 @@ class SpiderCMDVelNode:
         self.pin_motor_left_back = rospy.get_param('~pin_motor_left_back', 14)
         self.pin_motor_right_back = rospy.get_param('~pin_motor_right_back', 18)
 
-        self.wheel_dist = rospy.get_param('~wheel_dist', 22.3)
+        # in meter
+        self.wheel_dist = rospy.get_param('~wheel_dist', 0.223)
+
+        self.max_vel = rospy.get_param('~max_velocity', 255)
+        self.min_vel = rospy.get_param('~min_velocity', 200)
+
+        # in sec
+        self.timeout = rospy.get_param('~timeout', 1)
+
         self.velocity_corr = rospy.get_param('~velocity_correction', 1.0)
         self.rotation_corr = rospy.get_param('~rotation_correction', 1.0)
 
-        self.debug_mode = True
+        self.debug_mode = rospy.get_param('~debug_mode', False)
 
         try:
             if not self.debug_mode:
                 self.pi = pigpio.pi()
 
                 # switch them off for now
-                pi.write(self.pin_motor_left_front, 0)
-                pi.write(self.pin_motor_right_front, 0)
-                pi.write(self.pin_motor_left_back, 0)
-                pi.write(self.pin_motor_right_back, 0)
+                self.pi.write(self.pin_motor_left_front, 0)
+                self.pi.write(self.pin_motor_right_front, 0)
+                self.pi.write(self.pin_motor_left_back, 0)
+                self.pi.write(self.pin_motor_right_back, 0)
         except:
             print " Error: unable to set cmd vel!"
             # return
 
         self.vel_right = 0.0
         self.vel_left = 0.0
+        self.last_msg = None
 
         rospy.Subscriber("cmd_vel", Twist, self.cmd_cb)
 
         while not rospy.is_shutdown():
             rospy.sleep(0.02)  # 50Hz
+            self.check_timeout()
             # TODO: publish odometry
+            # TODO: check Timeout
+
+    def check_timeout(self):
+        if not self.last_msg:
+            self.vel_right = 0
+            self.vel_left = 0
+        else:
+            now = rospy.Time.now()
+            diff = now - self.last_msg
+            diff.to_sec()
+            if diff.to_sec() > self.timeout:
+                self.vel_right = 0
+                self.vel_left = 0
+
 
     def cmd_cb(self, msg):
+        self.last_msg = rospy.Time.now()
         trans = msg.linear.x
         rot = msg.angular.z
-
-        #self.speed_right = angle * math.pi * self.wheel_dist / 2.0 + speed
-        #self.speed_left = speed * 2 - self.speed_right
-        #rospy.loginfo("speed right: " + str(self.speed_right) + " speed left: " + str(self.speed_left))
-
-        # TODO CHECK MAX VALUES ANGLE AND SPEED
 
         rot = rot * self.rotation_corr
         vel_left = trans - 1.0 * rot * self.wheel_dist
         vel_right = trans + 1.0 * rot * self.wheel_dist
 
-        self.vel_left = vel_left * self.velocity_corr
-        self.vel_right = vel_right * self.velocity_corr
+        raw_vel_left = vel_left * self.velocity_corr
+        raw_vel_right = vel_right * self.velocity_corr
+
+        # normalize input
+        if raw_vel_left > 1.0:
+            raw_vel_left = 1.0
+        if raw_vel_right > 1.0:
+            raw_vel_right = 1.0
+        if raw_vel_left < -1.0:
+            raw_vel_left = -1.0
+        if raw_vel_right < -1.0:
+            raw_vel_right = -1.0
+
+        # now its between 0 and 2
+        raw_vel_left += 1
+        raw_vel_right += 1
+
+        # X between A and B, Y to fall between C and D
+        # Y = (X-A)/(B-A) * (D-C) + C
+        # X between 0 and 2, Y to fall between min_vel and max_vel
+        # Y = (X-0)/(2-0) * (255+255) - 255
+        self.vel_left = (raw_vel_left)/(2.0) * (255+255) - 255
+        self.vel_right = (raw_vel_right)/(2.0) * (255+255) - 255
+
+        if self.vel_left != 0:
+            if abs(self.vel_left) > self.max_vel:
+                self.vel_left = math.copysign(self.max_vel, self.vel_left)
+            if abs(self.vel_left) < self.min_vel:
+                self.vel_left = math.copysign(self.min_vel, self.vel_left)
+
+        if self.vel_right != 0:
+            if abs(self.vel_right) > self.max_vel:
+                self.vel_right = math.copysign(self.max_vel, self.vel_right)
+            if abs(self.vel_right) < self.min_vel:
+                self.vel_right = math.copysign(self.min_vel, self.vel_right)
 
         if self.debug_mode:
             rospy.loginfo("vel right: " + str(self.vel_right) + " vel left: " + str(self.vel_left))
@@ -72,29 +124,29 @@ class SpiderCMDVelNode:
         try:
             # ## left motor
             if self.vel_left > 0:
-                pi.write(self.pin_motor_left_back, 0)
+                self.pi.write(self.pin_motor_left_back, 0)
                 # pi.write(self.pin_motor_left_front, 1)
-                pi.set_PWM_dutycycle(self.pin_motor_left_front, abs(self.vel_left))
+                self.pi.set_PWM_dutycycle(self.pin_motor_left_front, abs(self.vel_left))
             elif self.vel_left < 0:
-                pi.write(self.pin_motor_left_front, 0)
+                self.pi.write(self.pin_motor_left_front, 0)
                 # pi.write(self.pin_motor_left_back, 1)
-                pi.set_PWM_dutycycle(self.pin_motor_left_back, abs(self.vel_left))
+                self.pi.set_PWM_dutycycle(self.pin_motor_left_back, abs(self.vel_left))
             else:
-                pi.write(self.pin_motor_left_front, 0)
-                pi.write(self.pin_motor_left_back, 0)
+                self.pi.write(self.pin_motor_left_front, 0)
+                self.pi.write(self.pin_motor_left_back, 0)
 
             # ## right motor
             if self.vel_right > 0:
-                pi.write(self.pin_motor_right_back, 0)
+                self.pi.write(self.pin_motor_right_back, 0)
                 # pi.write(self.pin_motor_right_front, 1)
-                pi.set_PWM_dutycycle(self.pin_motor_right_front, abs(self.vel_right))
+                self.pi.set_PWM_dutycycle(self.pin_motor_right_front, abs(self.vel_right))
             elif self.vel_right < 0:
-                pi.write(self.pin_motor_right_front, 0)
+                self.pi.write(self.pin_motor_right_front, 0)
                 # pi.write(self.pin_motor_right_back, 1)
-                pi.set_PWM_dutycycle(self.pin_motor_right_back, abs(self.vel_right))
+                self.pi.set_PWM_dutycycle(self.pin_motor_right_back, abs(self.vel_right))
             else:
-                pi.write(self.pin_motor_right_back, 0)
-                pi.write(self.pin_motor_right_front, 0)
+                self.pi.write(self.pin_motor_right_back, 0)
+                self.pi.write(self.pin_motor_right_front, 0)
         except:
             print " Error: unable to set cmd vel!"
 
