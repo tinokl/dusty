@@ -6,7 +6,6 @@ import sys
 import math
 import pigpio
 
-from geometry_msgs.msg import Twist
 from spider_msgs.msg import BumperEvent
 
 
