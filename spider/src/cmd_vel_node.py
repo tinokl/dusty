@@ -36,6 +36,11 @@ class SpiderCMDVelNode:
             if not self.debug_mode:
                 self.pi = pigpio.pi()
 
+                self.pi.set_mode(self.pin_motor_left_front, pigpio.OUTPUT)
+                self.pi.set_mode(self.pin_motor_right_front, pigpio.OUTPUT)
+                self.pi.set_mode(self.pin_motor_left_back, pigpio.OUTPUT)
+                self.pi.set_mode(self.pin_motor_right_back, pigpio.OUTPUT)
+
                 # switch them off for now
                 self.pi.write(self.pin_motor_left_front, 0)
                 self.pi.write(self.pin_motor_right_front, 0)
@@ -55,7 +60,6 @@ class SpiderCMDVelNode:
             rospy.sleep(0.02)  # 50Hz
             self.check_timeout()
             # TODO: publish odometry
-            # TODO: check Timeout
 
     def check_timeout(self):
         if not self.last_msg:
