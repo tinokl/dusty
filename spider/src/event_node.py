@@ -13,7 +13,7 @@ class SpiderEventNode:
     
     def __init__(self):
         self.pin_interrupt = rospy.get_param('~pin_interrupt', 5)
-        self.frequency = rospy.get_param('~frequency', 50)
+        self.frequency = rospy.get_param('~frequency', 30)
         self.rate = 1.0/self.frequency
 
         self.debug_mode = rospy.get_param('~debug_mode', False)
@@ -29,7 +29,7 @@ class SpiderEventNode:
 
         self.last_msg = None
 
-        self.pub = rospy.Publisher('bumper', JointState, queue_size=10)
+        self.pub = rospy.Publisher('bumper', BumperEvent, queue_size=10)
 
         while not rospy.is_shutdown():
             rospy.sleep(self.rate)
