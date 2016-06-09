@@ -6,7 +6,7 @@ import sys
 import math
 import pigpio
 
-from std_srvs.srv import SetBool
+from std_srvs.srv import *
 
 
 class SpiderServiceNode:
