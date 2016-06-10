@@ -31,6 +31,12 @@ class SpiderServiceNode:
         while not rospy.is_shutdown():
             rospy.spin()
 
+    def buzzer(self):
+        pi.set_PWM_dutycycle(beep, 5)
+        time.sleep(0.5)
+        pi.write(beep, 0)
+        time.sleep(0.5)
+
     def vakuum_service(self, req):
         resp = SetBoolResponse()
         resp.success = True

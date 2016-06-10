@@ -1,6 +1,12 @@
 <?xml version="1.0"?>
 <launch>
 
+<include file="$(find spider)/launch/spider.launch" />
+
+<include file="$(find pisusv)/launch/pisusv.launch" />
+
 <include file="$(find server_update)/launch/server_update.launch" />
+
+<include file="$(find cleaning_action_server)/launch/cleaning_action_server.launch" />
 
 </launch>

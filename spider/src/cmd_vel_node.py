@@ -53,6 +53,7 @@ class SpiderCMDVelNode:
         self.vel_right = 0.0
         self.vel_left = 0.0
         self.last_msg = None
+        self.enabled = False
 
         rospy.Subscriber("cmd_vel", Twist, self.cmd_cb)
 
@@ -62,19 +63,23 @@ class SpiderCMDVelNode:
             # TODO: publish odometry
 
     def check_timeout(self):
+        if not self.enabled:
+            return
         if not self.last_msg:
             self.vel_right = 0
             self.vel_left = 0
         else:
             now = rospy.Time.now()
             diff = now - self.last_msg
-            diff.to_sec()
             if diff.to_sec() > self.timeout:
+                self.enabled = False
                 self.vel_right = 0
                 self.vel_left = 0
+                self.set_motors()
 
 
     def cmd_cb(self, msg):
+        self.enabled = True
         self.last_msg = rospy.Time.now()
         trans = msg.linear.x
         rot = msg.angular.z
