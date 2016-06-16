@@ -7,9 +7,9 @@ import math
 import tf
 import pigpio
 
-from geometry_msgs.msg import Twist
-from nav_msgs.msgs import Odometry
-from geometry_msgs.msgs import TransformStamped
+from geometry_msgs.msg import Twist, Quaternion
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import TransformStamped
 
 
 class SpiderCMDVelNode:
@@ -91,6 +91,11 @@ class SpiderCMDVelNode:
 
     def publish_odometry(self):
         quat = tf.transformations.quaternion_from_euler(0, 0, self.yaw)
+        quaternion = Quaternion()
+        quaternion.x = quat[0]
+        quaternion.y = quat[1]
+        quaternion.z = quat[2]
+        quaternion.w = quat[3]
 
         if self.last_time is None:
             self.last_time = rospy.Time.now()
@@ -101,7 +106,7 @@ class SpiderCMDVelNode:
 
         current_time = rospy.Time.now()
 
-        dt = (current_time - self.last_time).toSec()
+        dt = (current_time - self.last_time).to_sec()
         delta_x = (vx * math.cos(self.yaw) - vy * math.sin(self.yaw)) * dt
         delta_y = (vx * math.sin(self.yaw) + vy * math.cos(self.yaw)) * dt
         delta_th = vth * dt
@@ -117,7 +122,7 @@ class SpiderCMDVelNode:
         odom.pose.pose.position.x = self.x
         odom.pose.pose.position.y = self.y
         odom.pose.pose.position.z = 0.0
-        odom.pose.pose.orientation = quat
+        odom.pose.pose.orientation = quaternion
         odom.twist.twist.linear.x = vx
         odom.twist.twist.linear.y = vy
         odom.twist.twist.angular.z = vth
@@ -130,9 +135,15 @@ class SpiderCMDVelNode:
         transform_stamped.transform.translation.x = self.x
         transform_stamped.transform.translation.y = self.y
         transform_stamped.transform.translation.z = 0.0
-        transform_stamped.transform.rotation = quat
+        transform_stamped.transform.rotation = quaternion
 
-        self.tfbr.sendTransform(transform_stamped)
+        #self.tfbr.sendTransform(transform_stamped)
+        self.tfbr.sendTransform((self.x, self.y, 0.0),
+                                (quat[0], quat[1], quat[2], quat[3]),
+                                rospy.Time.now(),
+                                "odom",
+                                "base_link")
+
         self.last_time = current_time
 
     def cmd_cb(self, msg):
@@ -191,31 +202,32 @@ class SpiderCMDVelNode:
 
     def set_motors(self):
         try:
-            # ## left motor
-            if self.vel_left > 0:
-                self.pi.write(self.pin_motor_left_back, 0)
-                # pi.write(self.pin_motor_left_front, 1)
-                self.pi.set_PWM_dutycycle(self.pin_motor_left_front, abs(self.vel_left))
-            elif self.vel_left < 0:
-                self.pi.write(self.pin_motor_left_front, 0)
-                # pi.write(self.pin_motor_left_back, 1)
-                self.pi.set_PWM_dutycycle(self.pin_motor_left_back, abs(self.vel_left))
-            else:
-                self.pi.write(self.pin_motor_left_front, 0)
-                self.pi.write(self.pin_motor_left_back, 0)
+            if not self.debug_mode:
+                # ## left motor
+                if self.vel_left > 0:
+                    self.pi.write(self.pin_motor_left_back, 0)
+                    # pi.write(self.pin_motor_left_front, 1)
+                    self.pi.set_PWM_dutycycle(self.pin_motor_left_front, abs(self.vel_left))
+                elif self.vel_left < 0:
+                    self.pi.write(self.pin_motor_left_front, 0)
+                    # pi.write(self.pin_motor_left_back, 1)
+                    self.pi.set_PWM_dutycycle(self.pin_motor_left_back, abs(self.vel_left))
+                else:
+                    self.pi.write(self.pin_motor_left_front, 0)
+                    self.pi.write(self.pin_motor_left_back, 0)
 
-            # ## right motor
-            if self.vel_right > 0:
-                self.pi.write(self.pin_motor_right_back, 0)
-                # pi.write(self.pin_motor_right_front, 1)
-                self.pi.set_PWM_dutycycle(self.pin_motor_right_front, abs(self.vel_right))
-            elif self.vel_right < 0:
-                self.pi.write(self.pin_motor_right_front, 0)
-                # pi.write(self.pin_motor_right_back, 1)
-                self.pi.set_PWM_dutycycle(self.pin_motor_right_back, abs(self.vel_right))
-            else:
-                self.pi.write(self.pin_motor_right_back, 0)
-                self.pi.write(self.pin_motor_right_front, 0)
+                # ## right motor
+                if self.vel_right > 0:
+                    self.pi.write(self.pin_motor_right_back, 0)
+                    # pi.write(self.pin_motor_right_front, 1)
+                    self.pi.set_PWM_dutycycle(self.pin_motor_right_front, abs(self.vel_right))
+                elif self.vel_right < 0:
+                    self.pi.write(self.pin_motor_right_front, 0)
+                    # pi.write(self.pin_motor_right_back, 1)
+                    self.pi.set_PWM_dutycycle(self.pin_motor_right_back, abs(self.vel_right))
+                else:
+                    self.pi.write(self.pin_motor_right_back, 0)
+                    self.pi.write(self.pin_motor_right_front, 0)
         except:
             print " Error: unable to set cmd vel!"
 

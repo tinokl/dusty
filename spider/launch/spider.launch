@@ -19,20 +19,20 @@
       	<param name="velocity_correction" value="1.0" />
       	<param name="rotation_correction" value="1.0" />
 
-      	<param name="debug_mode" value="True" />
+      	<param name="debug_mode" value="False" />
     </node>
 
     <node pkg="spider" type="event_node.py" name="spider_event_node" output="screen">
       	<param name="pin_interrupt" value="5" />
       	<param name="frequency" value="30" />
 
-      	<param name="debug_mode" value="True" />
+      	<param name="debug_mode" value="False" />
     </node>
 
     <node pkg="spider" type="services_node.py" name="spider_service_node" output="screen">
       	<param name="pin_vakuum" value="15" />
 
-      	<param name="debug_mode" value="True" />
+      	<param name="debug_mode" value="False" />
     </node>
 
 </launch>
