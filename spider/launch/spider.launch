@@ -11,7 +11,7 @@
       	<param name="wheel_dist" value="0.223" />
 
       	<param name="max_velocity" value="255" />
-      	<param name="min_velocity" value="200" />
+      	<param name="min_velocity" value="100" />
 
         <!-- in sec -->
       	<param name="timeout" value="1" />

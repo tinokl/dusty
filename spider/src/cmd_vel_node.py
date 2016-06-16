@@ -22,7 +22,7 @@ class SpiderCMDVelNode:
         self.wheel_dist = rospy.get_param('~wheel_dist', 0.223)
 
         self.max_vel = rospy.get_param('~max_velocity', 255)
-        self.min_vel = rospy.get_param('~min_velocity', 200)
+        self.min_vel = rospy.get_param('~min_velocity', 100)
 
         # in sec
         self.timeout = rospy.get_param('~timeout', 1)

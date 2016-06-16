@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
     <node pkg="usb_cam" type="usb_cam_node" name="camera" output="screen">
-        <param name="width" type="int" value="640" />
-        <param name="height" type="int" value="480" />
-        <param name="camera_frame_id" type="string" value="camera_frame" />
+        <param name="width" type="int" value="320" />
+        <param name="height" type="int" value="240" />
+        <param name="camera_frame_id" type="string" value="camera" />
         <param name="video_device" type="string" value="/dev/video0" />
         <param name="pixel_format" type="string" value="yuyv" />
         <param name="camera_name" type="string" value="pseye" />
