@@ -4,10 +4,12 @@ import roslib
 import rospy
 import sys
 import math
+import tf
 import pigpio
 
-from std_msgs.msg import String
 from geometry_msgs.msg import Twist
+from nav_msgs.msgs import Odometry
+from geometry_msgs.msgs import TransformStamped
 
 
 class SpiderCMDVelNode:
@@ -55,12 +57,22 @@ class SpiderCMDVelNode:
         self.last_msg = None
         self.enabled = False
 
+        self.x = 0
+        self.y = 0
+        self.vx = 0
+        self.vy = 0
+        self.yaw = 0
+        self.vyaw = 0
+        self.last_time = None
+
         rospy.Subscriber("cmd_vel", Twist, self.cmd_cb)
+        self.odom_pub = rospy.Publisher("/odom", Odometry, queue_size=10)
+        self.tfbr = tf.TransformBroadcaster()
 
         while not rospy.is_shutdown():
             rospy.sleep(0.02)  # 50Hz
             self.check_timeout()
-            # TODO: publish odometry
+            self.publish_odometry()
 
     def check_timeout(self):
         if not self.enabled:
@@ -77,12 +89,60 @@ class SpiderCMDVelNode:
                 self.vel_left = 0
                 self.set_motors()
 
+    def publish_odometry(self):
+
+        quat = tf.transformations.quaternion_from_euler(0, 0, self.yaw)
+
+        if self.last_time is None:
+            self.last_time = rospy.Time.now()
+
+        vx = self.vx #(msg->twist.twist.linear.x) *trans_mul_;
+        vy = self.vy #msg->twist.twist.linear.y;
+        vth = self.vyaw #(msg->twist.twist.angular.z) *rot_mul_;
+
+        current_time = rospy.Time.now()
+
+        dt = (current_time - self.last_time).toSec()
+        delta_x = (vx * math.cos(self.yaw) - vy * math.sin(self.yaw)) * dt
+        delta_y = (vx * math.sin(self.yaw) + vy * math.cos(self.yaw)) * dt
+        delta_th = vth * dt
+
+        self.x += delta_x
+        self.y += delta_y
+        self.yaw += delta_th
+
+        odom = Odometry()
+        odom.header.stamp = rospy.Time.now()
+        odom.header.frame_id = "odom"
+        odom.child_frame_id = "base_link"
+        odom.pose.pose.position.x = self.x
+        odom.pose.pose.position.y = self.y
+        odom.pose.pose.position.z = 0.0
+        odom.pose.pose.orientation = quat
+        odom.twist.twist.linear.x = vx
+        odom.twist.twist.linear.y = vy
+        odom.twist.twist.angular.z = vth
+
+        self.odom_pub.publish(odom)
+
+        transform_stamped = TransformStamped()
+        transform_stamped.header = odom.header
+
+        transform_stamped.transform.translation.x = self.x
+        transform_stamped.transform.translation.y = self.y
+        transform_stamped.transform.translation.z = 0.0
+        transform_stamped.transform.rotation = quat
+
+        self.tfbr.sendTransform(transform_stamped)
 
     def cmd_cb(self, msg):
         self.enabled = True
         self.last_msg = rospy.Time.now()
         trans = msg.linear.x
         rot = msg.angular.z
+
+        self.vx = trans
+        self.vyaw = rot
 
         rot = rot * self.rotation_corr
         vel_left = trans - 1.0 * rot * self.wheel_dist
