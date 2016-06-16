@@ -38,7 +38,8 @@ class SpiderEventNode:
     def check_state(self):
         state = 1
         try:
-            state = self.pi.read(self.pin_interrupt)
+            if not self.debug_mode:
+                state = self.pi.read(self.pin_interrupt)
         except:
             rospy.logerr("SpiderEventNode::Error: unable to read pin!")
 
@@ -49,7 +50,6 @@ class SpiderEventNode:
         else:
             event.state = BumperEvent.RELEASED
         self.pub.publish(event)
-
 
 
 if __name__ == '__main__':

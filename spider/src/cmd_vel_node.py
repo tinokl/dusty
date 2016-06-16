@@ -90,7 +90,6 @@ class SpiderCMDVelNode:
                 self.set_motors()
 
     def publish_odometry(self):
-
         quat = tf.transformations.quaternion_from_euler(0, 0, self.yaw)
 
         if self.last_time is None:
@@ -134,6 +133,7 @@ class SpiderCMDVelNode:
         transform_stamped.transform.rotation = quat
 
         self.tfbr.sendTransform(transform_stamped)
+        self.last_time = current_time
 
     def cmd_cb(self, msg):
         self.enabled = True
