@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node pkg="high_level_control" type="high_level_control_node.py" name="high_level_control_node" output="screen"/>
+
+</launch>
