@@ -9,4 +9,6 @@
 
 <include file="$(find cleaning_action_server)/launch/cleaning_action_server.launch" />
 
+<include file="$(find high_level_control)/launch/high_level_control.launch" />
+
 </launch>
