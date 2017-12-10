@@ -2,6 +2,7 @@
 
 # AUTOR: Konstantin Lassnig
 # konstantin.lassnig@gmail.com
+# Made for S-USV pi advanced Rev 1.x
 
 import roslib
 import rospy
@@ -17,7 +18,7 @@ class PISUSV:
     def __init__(self):
 
         self.pub = rospy.Publisher("/susv", BatteryState, queue_size = 10)
-        self.pub_event = rospy.Publisher("events", Log, queue_size = 10)
+        self.pub_event = rospy.Publisher("/events", Log, queue_size = 10)
         self.design_capacity = 3000
         self.state_charging = 0
         self.percentage = 0
