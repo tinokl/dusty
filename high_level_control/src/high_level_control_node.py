@@ -87,7 +87,7 @@ class HighLevelControl:
       return temp
 
     def battery_power_control(self):
-      if battery_power_state == OFF:
+      if self.battery_power_state == OFF:
         return
 
       temp = self.read_temperature()
