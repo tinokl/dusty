@@ -21,7 +21,7 @@ class HighLevelControl:
     def __init__(self):
 
         self.vakuum_state = OFF
-        self.battery_power_state = OFF
+        self.battery_power_state = ON # expect on first, so we switch it off
         # switch battery off, at least after this
         self.battery_start_time = datetime.now()
         self.battery_max_temperature = 30
