@@ -10,6 +10,7 @@ import random
 from geometry_msgs.msg import Twist
 from spider_msgs.msg import BumperEvent
 from std_srvs.srv import *
+from sensor_msgs.msg import LaserScan
 
 
 class CleaningActionServer:
@@ -26,7 +27,9 @@ class CleaningActionServer:
         self.enable_circle = False
         self.enable_wall_follower = False
 
-        rospy.Subscriber("/bumper", BumperEvent, self.bumper_cb)
+        #rospy.Subscriber("/bumper", BumperEvent, self.bumper_cb) Still error with bumper
+        rospy.Subscriber("/scan", LaserScan, self.scan_cb)
+
         self.pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
 
         self.r_service = rospy.Service('trigger_movement_random', SetBool, self.trigger_movement_random)
@@ -86,6 +89,14 @@ class CleaningActionServer:
             self.enable_circle = False
             resp.message = "trigger_movement_circle OFF"
         return resp
+
+    def scan_cb(self, data):
+        save = False
+        dist = 0.3
+        for r in data.ranges:
+            if r < dist:
+                save = True
+        self.hit = save
 
     def bumper_cb(self, data):
         if data.state == BumperEvent.PRESSED:
