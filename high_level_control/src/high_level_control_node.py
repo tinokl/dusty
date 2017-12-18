@@ -30,6 +30,8 @@ class HighLevelControl:
         self.pressed = 1
         self.unpressed = 0
 
+        self.charging_service = rospy.Service('trigger_charging', SetBool, self.charging_service)                
+
         # xbox one controller mapping
         self.button_B = 1
 
@@ -39,6 +41,27 @@ class HighLevelControl:
         while not rospy.is_shutdown():
           self.battery_power_control()
           rospy.sleep(1.0)
+
+    def vakuum_service(self, req):
+        resp = SetBoolResponse()
+        resp.success = True
+
+        try:
+            if req.data:
+                self.call_battery_service(ON)
+                resp.message = "Switched Charging Circuit ON"
+                self.battery_start_time = datetime.now()
+                self.battery_power_state = ON
+            else:
+                self.call_battery_service(OFF)
+                self.battery_power_state = OFF
+                resp.message = "Switched Charging Circuit OFF"
+        except:
+            rospy.logerr("HighLevelControlNode::Error: unable to read power pin!")
+            resp.message = "Error: unable to read power pin!"
+            resp.success = False
+
+        return resp
 
     def joy_cb(self, data):
         if data.buttons[self.button_B] == self.pressed:
